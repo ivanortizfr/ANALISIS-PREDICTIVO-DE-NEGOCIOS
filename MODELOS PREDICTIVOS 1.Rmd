@@ -1,0 +1,100 @@
+---
+title: "Untitled"
+author: "IVAN ORTIZ"
+date: "2023-08-13"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r llamando libreria}
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(xts)
+library(zoo)
+library(tseries)
+library(forecast)
+```
+
+```{r Fijar directorio}
+setwd("D:/USERDATA/2007048/OneDrive - BCRD/Desktop/ESTADISTICAS APLICADA A LOS NEGOCIOS/8VO TRIMESTRE/MODELO PREDICTIVOS/TAREA 1")
+
+library(readxl)
+LLEGTOTAL2011 <- read_excel("LLEGTOTAL2011.xls")
+View(LLEGTOTAL2011)
+
+library(readxl)
+LLEGTOTALOG <- read_excel("LLEGTOTALOG.xls")
+View(LLEGTOTALOG)
+
+```
+
+```{r grafico llegtotalnoresidentes}
+plot(LLEGTOTAL2011$Mensual, type="l")
+```
+
+```{r convertir en serie de tiempo}
+
+library(tseries)
+xts <- ts(LLEGTOTAL2011$Mensual, frequency = 167, start = c(2011,01,01))
+plot(xts)
+
+```
+
+```{r Pronostico reg lineal}
+attach(LLEGTOTAL2011)
+mod1 <- lm(Mensual ~ dolar+`Pasaje al exterior`+`Paquetes turísticos`+hotelesbaresyrest)
+u <- mod1$residuals
+yhat <- mod1$fitted.values
+
+summary(mod1)
+```
+```{r Pronostico reg lineal2}
+attach(LLEGTOTAL2011)
+mod2 <- lm(Mensual ~ dolar+`Pasaje al exterior`+`Paquetes turísticos`+hotelesbaresyrest+dolarcan+euro)
+u <- mod2$residuals
+yhat <- mod2$fitted.values
+
+summary(mod2)
+```
+
+```{r Pronostico reg lineal3}
+attach(LLEGTOTAL2011)
+mod3 <- lm(Mensual ~ dolar+`Pasaje al exterior`+`Paquetes turísticos`+hotelesbaresyrest+dolarcan+euro+gtRD+gtpuntacana+gtcaribe)
+u <- mod3$residuals
+yhat <- mod3$fitted.values
+
+summary(mod3)
+```
+```{r Pronostico reg lineal4}
+attach(LLEGTOTAL2011)
+mod4 <- (lm(Mensual ~ dolar+`Pasaje al exterior`+hotelesbaresyrest+gtRD+gtpuntacana))
+u <- mod4$residuals
+yhat <- mod4$fitted.values
+
+summary (mod4)
+
+```
+
+```{r Pronostico reg lineal5 log}
+attach(LLEGTOTALOG)
+mod5 <- (lm(lnmensual ~ tsdolar+lnpasaje+lnhbr+lngtRD+lngtpuntacana+lngtcaribe+lneuro))
+u <- mod5$residuals
+yhat <- mod5$fitted.values
+
+summary (mod5)
+
+```
+
+```{r COMPARACION }
+library(stargazer)
+
+stargazer(mod1,mod2,mod3,mod4,mod5, type = "text")
+
+```
