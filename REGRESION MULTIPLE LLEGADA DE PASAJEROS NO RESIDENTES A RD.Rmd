@@ -1,0 +1,100 @@
+---
+title: "Untitled"
+author: "IVAN ORTIZ"
+date: "2023-08-15"
+output:
+  html_document: default
+  word_document: default
+---
+---
+title: "Untitled"
+author: "IVAN ORTIZ"
+date: "2023-08-13"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r llamando libreria}
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(xts)
+library(zoo)
+library(tseries)
+library(forecast)
+```
+
+```{r Fijar directorio}
+setwd("C:/Users/ivanh/OneDrive/Desktop/MEA INTEC/8 TRIMESTRE/MODELOS PREDICTIVOS/TAREA 1")
+
+library(readxl)
+LLEGTOTAL2011 <- read_excel("LLEGTOTAL2011.xls")
+View(LLEGTOTAL2011)
+
+library(readxl)
+LLEGTOTALOG <- read_excel("LLEGTOTALOG.xls")
+View(LLEGTOTALOG)
+
+```
+
+```{r grafico llegtotalnoresidentes}
+plot(LLEGTOTAL2011$Mensual, type="l")
+```
+
+```{r convertir en serie de tiempo}
+
+library(tseries)
+xts <- ts(LLEGTOTAL2011$Mensual, frequency = 252, start = c(2011,01,01))
+plot(xts)
+
+```
+
+
+```{r Pronostico reg lineal5 log}
+attach(LLEGTOTALOG)
+mod5 <- (lm(lnmensual ~ tsdolar+lnpasaje+lnhbr+lngtRD+lngtpuntacana+lngtcaribe+lneuro))
+u <- mod5$residuals
+yhat <- mod5$fitted.values
+
+summary (mod5)
+
+```
+```{r Pronostico reg lineal 6}
+attach(LLEGTOTALOG)
+mod6 <- lm(lnmensual ~ tsdolar + pasajeP + PTURP + HBRP + lngtRD + lngtpuntacana + lngtRD + lngtcaribe + lneuro)
+u <- mod6$residuals
+yhat <- mod6$fitted.values
+
+summary(mod6)
+
+```
+```{r Pronostico reg lineal 7}
+attach(LLEGTOTALOG)
+mod7 <- lm(lnmensual ~ tsdolar + lnpasaje + lnpaquetes + lnhbr + lngtRD + lngtpuntacana + lngtRD + lngtcaribe + lneuro + lngtbav +lngtcabarete + lngtcapcana + lngtcascampo + lngtmer + lngtsosua + lngtsam + lngtterr +lnbach)
+u <- mod7$residuals
+yhat <- mod7$fitted.values
+
+summary(mod7)
+
+```
+
+```{r COMPARACION }
+library(stargazer)
+stargazer(mod5,mod6,mod7, type = "text")
+```
+
+```{r COMPARACION }
+library(fable)
+
+# uso del modelo
+
+predict(mod7,n.ahead=6)
+
+plot(forecast::forecast(mod7,n.ahead=06))
+```

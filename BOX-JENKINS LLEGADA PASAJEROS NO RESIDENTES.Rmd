@@ -1,0 +1,146 @@
+---
+title: "Box Jenkins llegada de pasajeros"
+author: "IVAN ORTIZ"
+date: "2023-08-22"
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r llamando libreria}
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(xts)
+library(zoo)
+library(tseries)
+library(forecast)
+library(astsa)
+library(ggfortify)
+library(ggplot2)
+library(dplyr)
+library(fable)
+library(stargazer)
+library(fGarch)
+library(fDMA)
+library(lubridate)
+library(ggpubr)
+library(cluster)
+library(data.table)
+library(dbplyr)
+library(tswge)
+library(haven)
+library(GGally)
+library(PerformanceAnalytics)
+library(rugarch)
+
+```
+
+```{r Fijar directorio}
+setwd("C:/Users/ivanh/OneDrive/Desktop/MEA INTEC/8 TRIMESTRE/MODELOS PREDICTIVOS/TAREA 1")
+
+library(readxl)
+LLEGTOTAL2011 <- read_excel("LLEGTOTAL2011.xls")
+View(LLEGTOTAL2011)
+
+library(readxl)
+LLEGTOTALOG <- read_excel("LLEGTOTALOG.xls")
+View(LLEGTOTALOG)
+
+```
+
+```{r serie temporal}
+# asignando representacion de una serie temporal
+attach(LLEGTOTALOG)
+llegt <- xts(x = LLEGTOTALOG$Mensual,order.by = LLEGTOTALOG$TIEMPO)
+
+acf(llegt)
+acf2(llegt)
+autoplot(llegt) +
+  
+  theme_minimal() +
+  
+  labs(y = "llegada de pasajeros no residentes", x = "Tiempo")
+
+```
+
+```{r transformacion de serie}
+
+# diferencias absolutas
+plot(diff(llegt))
+acf2(diff(llegt))
+
+# Obtener cambio logaritmico
+dlnllegt <- diff(log(1+llegt))[-1]
+dlnllegt <- dlnllegt[!is.na(dlnllegt)]
+
+
+plot(dlnllegt, grid.col = NA)
+plot(dlnllegt^2, grid.col = NA)
+
+```
+
+```{r dickey-fuller text}
+#3.2. Realice el test Dickey-Fuller para explicar el orden de integraciÃ³n de la serie.
+adf.test(llegt)
+adf.test(dlnllegt)
+
+ #la prueba dickey fuller comprobó que la serie original tiene raiz unitaria y no es estacionaria, la 1ra diferencia si es estacionaria.
+
+```
+
+```{r modelo autoregresivo }
+
+acf2(diff(dlnllegt))
+
+# estimacion ARIMA
+model1 <- arima(dlnllegt,order=c(2,0,2))
+model1
+
+summary(model1)
+
+# Auto.Arima
+
+model1 <-auto.arima(dlnllegt, seasonal=F, ic ="aic", trace=T)
+
+model1 <-auto.arima(dlnllegt, seasonal=F, ic ="aic", trace=T,  stepwise = F)
+
+```
+
+```{r analisis residual}
+
+r <- model1$residuals
+
+r %>% data.frame() %>%
+  
+  ggplot(aes(x = .)) +
+  
+  geom_histogram() +
+  
+  theme_minimal()
+
+#la distribucion del residuo es normal 
+
+#correlograma
+
+acf2(r, na.action = na.pass)
+
+Box.test(r,lag=1,type = "Box-Pierce")
+
+Box.test(r,lag=1,type = "Ljung-Box")
+
+#correlograma y box
+
+tsdiag(model1)
+
+
+
+library(fable)
+
+# uso del modelo
+
+predict(model1,n.ahead=6)
+
+plot(forecast::forecast(model1,n.ahead=06))
+
+
+```
