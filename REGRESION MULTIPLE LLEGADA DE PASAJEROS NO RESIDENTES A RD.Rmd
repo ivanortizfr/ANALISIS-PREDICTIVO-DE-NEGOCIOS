@@ -1,14 +1,15 @@
 ---
 title: "Untitled"
-author: "IVAN ORTIZ"
-date: "2023-08-15"
+author: "IVAN ORTIZ 1062534 y KARLA LARA 1062533"
+date: '2023-08-15'
 output:
   html_document: default
   word_document: default
+  pdf_document: default
 ---
 ---
 title: "Untitled"
-author: "IVAN ORTIZ"
+author: "IVAN ORTIZ Y KARLA LARA"
 date: "2023-08-13"
 output:
   word_document: default
@@ -28,10 +29,11 @@ library(xts)
 library(zoo)
 library(tseries)
 library(forecast)
+library(fable)
 ```
 
 ```{r Fijar directorio}
-setwd("C:/Users/ivanh/OneDrive/Desktop/MEA INTEC/8 TRIMESTRE/MODELOS PREDICTIVOS/TAREA 1")
+setwd("D:/USERDATA/2007048/OneDrive - BCRD/Desktop/ESTADISTICAS APLICADA A LOS NEGOCIOS/8VO TRIMESTRE/MODELO PREDICTIVOS/TAREA 1")
 
 library(readxl)
 LLEGTOTAL2011 <- read_excel("LLEGTOTAL2011.xls")
@@ -50,7 +52,7 @@ plot(LLEGTOTAL2011$Mensual, type="l")
 ```{r convertir en serie de tiempo}
 
 library(tseries)
-xts <- ts(LLEGTOTAL2011$Mensual, frequency = 252, start = c(2011,01,01))
+xts <- ts(LLEGTOTALOG$Mensual, frequency = 12, start = c(2011,01,01))
 plot(xts)
 
 ```
@@ -84,17 +86,43 @@ summary(mod7)
 
 ```
 
-```{r COMPARACION }
+```{r COMPARACION MODELOS }
 library(stargazer)
 stargazer(mod5,mod6,mod7, type = "text")
 ```
 
-```{r COMPARACION }
-library(fable)
+```{r COMPARACION PRONOSTICO VS REAL }
+
 
 # uso del modelo
 
-predict(mod7,n.ahead=6)
 
-plot(forecast::forecast(mod7,n.ahead=06))
+predicciones <- predict(mod7, newdata = LLEGTOTALOG)
+
+
+# Imprimir las predicciones
+
+ 
+
+head(predicciones, 100)
+print(predicciones)
+ 
+
+# Crear un nuevo dataframe con características, valores reales y predicciones
+
+resultados <- data.frame(LLEGADA = LLEGTOTALOG$lnmensual,
+
+                          Prediccion = predicciones)
+
+ 
+
+# Imprimir el dataframe de resultados
+
+ 
+
+head(resultados,160)
+
+ view(LLEGTOTALOG)
+
 ```
+
