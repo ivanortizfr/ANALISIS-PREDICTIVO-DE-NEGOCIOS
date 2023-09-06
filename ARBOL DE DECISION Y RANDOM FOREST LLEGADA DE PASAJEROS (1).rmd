@@ -1,0 +1,148 @@
+---
+title: "Untitled"
+output: html_document
+date: '2023-09-06'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r llamando libreria}
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(xts)
+library(zoo)
+library(tseries)
+library(forecast)
+library(fable)
+```
+
+```{r Fijar directorio}
+
+setwd("D:/USERDATA/2011045/Downloads")
+
+library(readxl)
+LLEGTOTALOG <- read_excel("LLEGTOTALOG.xls")
+View(LLEGTOTALOG)
+
+```
+
+
+```{r distribucion}
+set.seed(1234, kind = "Mersenne-Twister") #Fijar semilla 
+index <- caret::createDataPartition(LLEGTOTALOG$Mensual, p=0.6699, list = FALSE)
+trainData1 <- LLEGTOTALOG [index, ]
+testData1 <- LLEGTOTALOG [-index, ]
+table(trainData1$Mensual)
+table(testData1$Mensual)
+
+```
+
+```{r Entrenamiento con datos balanceados AB}
+
+modelo_dt <- rpart::rpart(Mensual ~ tsdolar + Pasajeexterior + Paquetest + hotelesbaresyrest + gtRD + gtpuntacana + gtRD + gtcaribe + euro + gtbav + gtcabarete + gtcapcana + gtcasacampo + gtmer + gtsosua + gtsamana + gtterrenas  + gtbach , data = trainData1)
+rpart.plot::rpart.plot(modelo_dt, extra=100)
+
+# Predicción
+predict_dt <- predict(modelo_dt, testData1, type = "vector")
+print(predict_dt)
+# Desempeño
+library(caret)
+
+```
+ 
+```{r Librerías y datos, include=FALSE, echo=FALSE, warning=FALSE}
+
+pckg.check <- function(x){
+  if(!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = TRUE)
+    library(x, character.only = TRUE)
+  }
+}
+pckg <- c("tidyverse", "magrittr", "DMwR2", "tseries", "xts", "quantmod", "qwraps2", "ROSE")
+sapply(pckg, pckg.check)
+library(caret)
+
+library(PRROC)
+library(ROCR)
+library(randomForest)
+library(tune)
+
+pckg <- append(pckg, c("mlbench")) # Agregar al vector pckg nuevos elementos
+sapply(pckg, pckg.check) # Llamar las librerÃ­as contenidas en el vector pckg
+
+
+pckg <- pckg[!pckg %in% c("arulesViz","arules")]
+pckg <- append(pckg, c("randomForest","caret"))
+sapply(pckg, pckg.check)
+
+
+#Datos
+
+
+data <- LLEGTOTALOG 
+data %>% str() 
+data$lnmensual <- as.factor(data$lnmensual)
+data %>%
+  group_by(lnmensual) %>% 
+  count()
+```
+
+```{r Train y test data, warning=FALSE}
+set.seed(164, kind = "Mersenne-Twister")
+train_id <- sample(seq_len(nrow(data)), 
+                   size = floor(0.7*nrow(data)))
+train_data <- data[train_id,]
+test_data <- data[-train_id,]
+
+# Distribución OBSERVACION_PRECIO en train y test data
+prop.table(table(train_data$lnmensual))
+prop.table(table(test_data$lnmensual))
+```
+
+```{r RF, echo=FALSE, warning=FALSE} 
+rf <- randomForest(Mensual ~ tsdolar + lnpasaje + lnpaquetes + lnhbr + lngtRD + lngtpuntacana + lngtRD + lngtcaribe + lneuro + lngtbav +lngtcabarete + lngtcapcana + lngtcascampo + lngtmer + lngtsosua + lngtsam + lngtterr +lnbach, data = train_data, proximity=TRUE)
+rf
+```
+
+```{r Prediccion, echo=FALSE, warning=FALSE}
+pruebaobsp <- predict(rf, test_data) # Predecir utilizando el conjutno de prueba
+
+```
+
+```{r Plot, echo=FALSE, warning=FALSE}
+plot(rf)
+```
+
+* No. de nodos para los árboles
+
+```{r Nodos para arboles, echo=FALSE, warning=FALSE}
+hist(treesize(rf),
+     main = "No. de nodos para los ?rboles",
+     col = "blue")
+
+# importation de importancia
+varImpPlot(rf,
+           sort = T,
+           n.var = 5,
+           main = "Top 5 - Atributos de importancia")
+importance(rf)
+```
+
+```{r Entrenamiento con datos balanceados RF}
+modllegadarf <- rpart::rpart(Mensual ~ tsdolar + lnpasaje + lnpaquetes + lnhbr + lngtRD + lngtpuntacana + lngtRD + lngtcaribe + lneuro + lngtbav +lngtcabarete + lngtcapcana + lngtcascampo + lngtmer + lngtsosua + lngtsam + lngtterr +lnbach,  data = train_data)
+rpart.plot::rpart.plot(modllegadarf, extra=100)
+
+# Prediccion
+ predict_dtrf <- predict(modllegadarf, newdata = test_data)
+ 
+ print(predict_dtrf)
+ 
+```
+
+
+
